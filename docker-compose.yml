@@ -1,0 +1,42 @@
+version: '3.7'
+
+services:
+  mongo:
+    image: mongo
+    volumes:
+      - data-volume:/data/db
+    ports:
+      - "27017-27019:27017-27019"
+    networks:
+      - app-network
+
+  server:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    image: server
+    command: npm run dev
+    depends_on: 
+      - mongo
+    environment:
+      - NODE_ENV=development
+      - MONGO_HOSTNAME=mongo
+      - MONGO_DB=ssin
+      - MONGO_PORT=27017
+    volumes:
+      - ./src/:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    data-volume:
+    node_modules:
+    web-root:
+      driver: local
