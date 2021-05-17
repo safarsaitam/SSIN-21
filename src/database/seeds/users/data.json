@@ -1,6 +1,8 @@
 [
     {
-        "username": "user",
-        "password": "password"
+        "username": "user1",
+        "password": "password",
+        "full_name": "nome nome nome",
+        "security_level": 1
     }
 ]

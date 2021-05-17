@@ -19,6 +19,9 @@ require('./database/database');
 // Seed DB
 require('./database/seed');
 
+// Create missing temporary user IDS
+require('./database/create_user_ids');
+
 const app = express();
 
 app.use(cors());
