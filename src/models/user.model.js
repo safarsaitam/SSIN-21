@@ -18,9 +18,6 @@ const userSchema = new mongoose.Schema({
     id: {
         type: String,
         default: "",
-    },
-    id_expiration_date: {
-        type: Date,
     }
 });
 
