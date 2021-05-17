@@ -7,6 +7,8 @@ WORKDIR /usr/src/app
 # Install Dependencies
 COPY package*.json ./
 
+RUN apk update
+RUN apk add openssl
 RUN npm ci
 
 # Copy app source code

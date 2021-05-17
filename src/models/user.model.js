@@ -18,7 +18,10 @@ const userSchema = new mongoose.Schema({
     id: {
         type: String,
         default: "",
-    }
+    },
+    certificate: {
+        type: String,
+    },
 });
 
 const User = mongoose.models.User
