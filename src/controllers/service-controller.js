@@ -1,29 +1,53 @@
 const User = require('../models/user.model');
 
-exports.callService = async function callService(req, res) {
-    const user = req.param('user');
-    const mongoUser = await User.findById(user);
+exports.squareRoot = async function squareRoot(req, res) {
 
-    if (mongoUser.security_level < service) {
+    const body = req.body;
+    const userID = body.userID;
+    const user = await User.findById(userID);
+
+    if (user.security_level < 1) {
         res.status(403).json('You do not have access to this service')
     } else {
-        switch (service) {
-            case 1:
-                squareRoot(req.param('number'), res);
-                break;
-            default:
-                break;
-        }
+        const number = body.number;
+        const squareRoot = Math.sqrt(number);
+        const result = { squareRoot: squareRoot };
+
+        res.status(200).send(result);
     }
-
-
-
 }
 
-function squareRoot(number, res) {
+exports.cubicRoot = async function cubicRoot(req, res) {
 
-    const squareRoot = Math.sqrt(number);
-    const result = { squareRoot: squareRoot };
+    const body = req.body;
+    const userID = body.userID;
+    const user = await User.findById(userID);
 
-    res.status(200).send(result);
+    if (user.security_level < 2) {
+        res.status(403).json('You do not have access to this service')
+    } else {
+        const number = body.number;
+        const cubicRoot = Math.cbrt(number);
+        const result = { cubicRoot: cubicRoot };
+
+        res.status(200).send(result);
+    }
+}
+
+exports.nRoot = function nRoot(req, res) {
+
+    const body = req.body;
+    const userID = body.userID;
+    const user = await User.findById(userID);
+
+    if (user.security_level < 3) {
+        res.status(403).json('You do not have access to this service')
+    } else {
+        const number = body.number;
+        const index = body.index;
+        const nRoot = Math.pow(number, 1/index);
+        const result = { nRoot: nRoot };
+
+        res.status(200).send(result);
+    }
 }
