@@ -1,4 +1,5 @@
 const User = require('../models/user.model');
+const pem = require('pem');
 
 exports.registerUser = async function registerUser(req, res) {
 
@@ -21,7 +22,16 @@ exports.registerUser = async function registerUser(req, res) {
             users[0].id = null;
             users[0].save().then(
                 () => {
-                    res.status(200).send('User successfully registered');
+                    pem.createCertificate({ days: 1, selfSigned: true }, function (err, keys) {
+                        if (err) {
+                            console.error(err);
+                            res.status(500);
+                        }
+                        res.status(200).json({
+                            'certificate': keys.certificate,
+                            'serviceKey': keys.serviceKey,
+                        });
+                    });
                 }
             );
         }
