@@ -8,22 +8,32 @@ exports.registerUser = async function registerUser(req, res) {
     const username = body.username;
     const oneTimeId = body.oneTimeId;
 
-    let user = await User.find({
+    User.find({
         username: username,
-        id: oneTimeId 
-    });
+        id: oneTimeId
+    })
+        .then(
+            (users) => {
+                if (users.length == 0) {
+                    res.status(404).send('No pre-register found');
+                    return;
+                }
 
-    if(user == null) {
-        res.status(404).send('No pre-register found');
-        return;
-    }
+                users[0].id = null;
+                users[0].save().then(
+                    () => {
+                        console.log('AFTER REGISTER');
+                        console.log(users[0]);
 
-    user.id = null;
-    await user.save();
+                        res.status(200).send('User successfully registered');
+                    }
+                );
 
-    console.log('AFTER REGISTER');
-    console.log(user);
 
-    res.status(200).send('User successfully registered');
+
+            }
+        );
+
+
 
 }
