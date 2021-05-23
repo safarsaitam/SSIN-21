@@ -5,6 +5,8 @@ const logger = require('morgan');
 const cors = require('cors');
 const express = require('express');
 const multer = require('multer');
+const servicesRouter = require('./routes/services');
+const authRouter = require('./routes/authentication');
 
 const router = require('./routes/router');
 require('dotenv').config();
@@ -34,6 +36,8 @@ app.use(multerMid.single('file'));
 
 // Loads all the api routes
 app.use('/', router);
+app.use('/services', servicesRouter);
+app.use('/auth', authRouter);
 
 // Optional fallthrough error handler
 app.use((err, req, res) => {
