@@ -1,7 +1,25 @@
 [
     {
         "username": "user1",
-        "full_name": "nome nome nome",
+        "full_name": "Pedro Teixeira",
         "security_level": 1
+    },
+
+    {
+        "username": "user2",
+        "full_name": "Rafael Calou",
+        "security_level": 2
+    },
+
+    {
+        "username": "user3",
+        "full_name": "Mota Sossegadinho",
+        "security_level": 3
+    },
+
+    {
+        "username": "user4",
+        "full_name": "Maria Xiu",
+        "security_level": 2
     }
 ]
