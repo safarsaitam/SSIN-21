@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
     },
     certificate: {
         type: String,
-    },
+    }
 });
 
 const User = mongoose.models.User

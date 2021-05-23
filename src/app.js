@@ -6,6 +6,9 @@ const cors = require('cors');
 const express = require('express');
 const multer = require('multer');
 
+let servicesRouter = require('./routes/services');
+let authRouter = require('./routes/authentication');
+
 const router = require('./routes/router');
 require('dotenv').config();
 
@@ -33,6 +36,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(multerMid.single('file'));
 
 // Loads all the api routes
+app.use('/services', servicesRouter);
+app.use('/auth', authRouter);
 app.use('/', router);
 
 // Optional fallthrough error handler
