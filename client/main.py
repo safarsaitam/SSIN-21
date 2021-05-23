@@ -10,10 +10,10 @@ def menu():
     print()
 
     choice = input("""
-                      1: Register
-                      q: Quit
+            1: Register
+            q: Quit
 
-                      Please enter your choice: """)
+            Please enter your choice: """)
 
     if choice == "1":
         register()
@@ -40,6 +40,7 @@ def register():
     response = r.text
     print('')
     print(response)
+    print('')
     menu()
 
 

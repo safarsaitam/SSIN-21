@@ -11,28 +11,21 @@ exports.registerUser = async function registerUser(req, res) {
     User.find({
         username: username,
         id: oneTimeId
-    })
-        .then(
-            (users) => {
-                if (users.length == 0) {
-                    res.status(404).send('No pre-register found');
-                    return;
-                }
-
-                users[0].id = null;
-                users[0].save().then(
-                    () => {
-                        console.log('AFTER REGISTER');
-                        console.log(users[0]);
-
-                        res.status(200).send('User successfully registered');
-                    }
-                );
-
-
-
+    }).then(
+        (users) => {
+            if (users.length == 0) {
+                res.status(404).send('No pre-register found');
+                return;
             }
-        );
+
+            users[0].id = null;
+            users[0].save().then(
+                () => {
+                    res.status(200).send('User successfully registered');
+                }
+            );
+        }
+    );
 
 
 
