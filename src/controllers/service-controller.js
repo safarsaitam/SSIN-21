@@ -34,7 +34,7 @@ exports.cubicRoot = async function cubicRoot(req, res) {
     }
 }
 
-exports.nRoot = function nRoot(req, res) {
+exports.nRoot = async function nRoot(req, res) {
 
     const body = req.body;
     const userID = body.userID;
