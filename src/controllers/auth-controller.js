@@ -148,7 +148,7 @@ exports.login = async function login(req, res) {
 }
 
 exports.addMessageServer = async (req, res) => {
-    User.findOne({ certificate: req.header.certificate }).then((user) => {
+    User.findOne({ certificate: req.header('authorization') }).then((user) => {
         user.message_server_address = req.body.ip;
         user.message_server_port = req.body.port;
         user.save();

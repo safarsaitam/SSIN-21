@@ -389,12 +389,16 @@ def openServer(certificateFile, keyFile):
     httpd.serve_forever()
 
     # tell server ip and port
+    headers = {
+        'authorization': utils.trimPems(certificate)
+    }
+
     data = {
         'ip': MESSAGE_SERVER_ADDR,
         'port': MESSAGE_SERVER_PORT
     }
 
-    r = requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, verify=False)
+    r = requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, headers=headers, verify=False)
     printServiceResponse(r, 'Post message server info')
 
 class MessageServerHandler(BaseHTTPRequestHandler):
@@ -422,10 +426,14 @@ class MessageServerHandler(BaseHTTPRequestHandler):
             self.send_response(403)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write("Unauthorized".encode('utf-8'))
+            self.wfile.write('Unauthorized'.encode('utf-8'))
 
     
     def get_sender(self, senderCertificate):
+        file = open('certificate.pem', mode='r')
+        certificate = file.read()
+        file.close()
+        
         headers = {
             'authorization': utils.trimPems(certificate)
         }
