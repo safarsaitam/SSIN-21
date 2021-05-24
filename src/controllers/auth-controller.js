@@ -164,7 +164,7 @@ exports.getMessageServer = async (req, res) => {
         }
         
         if (!user.message_server_address || user.message_server_address == '') {
-            res.status(203).send('User if offline');
+            res.status(203).send('User is offline');
         } else {
             res.status(200).json({
                 'address': user.message_server_address,

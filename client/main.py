@@ -74,6 +74,7 @@ def menu():
 
         elif choice == "M" or choice == "m":
             sendMessage()
+            print("dab")
 
         elif choice == "Q" or choice == "q":
             state = "unregistered"
@@ -195,9 +196,9 @@ def printRegisterResponse(r):
         # Open server in new process
         Process(target=openServer, args=('certificate.pem', 'key.key')).start()
 
-        setUsernamePassword()
-
         print('SERVER RESPONSE: AUTHENTICATION SUCCESSFUL')
+
+        setUsernamePassword()
 
     elif status == 404:
         print('SERVER RESPONSE: ' + r.text)
@@ -333,6 +334,8 @@ def sendMessage():
         headers= headers,
         verify= False
         )
+    
+    menu()
 
 def squareRoot():
 
