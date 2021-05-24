@@ -27,18 +27,21 @@ def main():
 
 
 def menu():
+    global state
     if state == "unregistered":
         print()
 
         choice = input("""
                 1: Register
+                2: Login
                 q: Quit
 
                 Please enter your choice: """)
 
         if choice == "1":
-            register()
-
+            register()  
+        elif choice == "2":
+            login()
         elif choice == "Q" or choice == "q":
             sys.exit
         else:
@@ -67,7 +70,9 @@ def menu():
             nRoot()
 
         elif choice == "Q" or choice == "q":
-            sys.exit
+            state = "unregistered"
+            os.system('clear')
+            menu()
         else:
             os.system('clear')
             print("Invalid option chosen")
@@ -155,14 +160,39 @@ def printRegisterResponse(r):
         global state
         state = "registered"
 
+        response = r.json()
+        global certificate
+        certificate = response['certificate']
+
+        if os.path.exists('certificate.pem'):
+            os.remove('certificate.pem')
+
+        certificateFile = open('certificate.pem', 'a')
+        for line in certificate:
+            certificateFile.write(line)
+        certificateFile.close()
+
+        global key
+        key = response['serviceKey']
+
+        if os.path.exists('key.key'):
+            os.remove('key.key')
+
+        keyFile = open('key.key', 'a')
+        for line in key:
+            keyFile.write(line)
+        keyFile.close()
+
         # Open server in new process
         # Process(target=openServer).start()
 
         print('SERVER RESPONSE: REGISTRATION SUCCESSFUL')
     elif status == 404:
         print('SERVER RESPONSE: ' + r.text)
+        menu()
     else:
         print('SOMETHING WENT WRONG WITH THE SERVER')
+        menu()
 
     print('')
     setUsernamePassword()
@@ -180,30 +210,68 @@ def register():
 
     r = requests.post(url=API_ENDPOINT + '/auth/register',
                       data=data, verify=False)
-    response = r.json()
-    global certificate
-    certificate = response['certificate']
-
-    if os.path.exists('certificate.pem'):
-        os.remove('certificate.pem')
-
-    certificateFile = open('certificate.pem', 'a')
-    for line in certificate:
-        certificateFile.write(line)
-    certificateFile.close()
-
-    global key
-    key = response['serviceKey']
-
-    if os.path.exists('key.key'):
-        os.remove('key.key')
-
-    keyFile = open('key.key', 'a')
-    for line in key:
-        keyFile.write(line)
-    keyFile.close()
 
     printRegisterResponse(r)
+
+
+def printLoginResponse(r): 
+    os.system('clear')
+
+    status = r.status_code
+
+    print(datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+
+    if status == 200:
+        global state
+        state = "registered"
+
+        response = r.json()
+        global certificate
+        certificate = response['certificate']
+
+        if os.path.exists('certificate.pem'):
+            os.remove('certificate.pem')
+
+        certificateFile = open('certificate.pem', 'a')
+        for line in certificate:
+            certificateFile.write(line)
+        certificateFile.close()
+
+        global key
+        key = response['serviceKey']
+
+        if os.path.exists('key.key'):
+            os.remove('key.key')
+
+        keyFile = open('key.key', 'a')
+        for line in key:
+            keyFile.write(line)
+        keyFile.close()
+
+        # Open server in new process
+        # Process(target=openServer).start()
+
+        print('SERVER RESPONSE: AUTHENTICATION SUCCESSFUL')
+    else:
+        print('SERVER RESPONSE: ' + r.text)
+
+    print('')
+    menu()
+
+
+def login():
+    username = input('Username: ')
+    password = getpass.getpass('Password: ')
+
+    data = {
+        'username': username,
+        'password': password
+    }
+
+    r = requests.post(url=API_ENDPOINT + '/auth/login',
+                      data=data, verify=False)
+
+    printLoginResponse(r)
 
 
 def squareRoot():

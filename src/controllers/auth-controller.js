@@ -97,6 +97,56 @@ exports.setUsernameAndPassword = async function setUsernameAndPassword(req, res)
 
 }
 
+exports.login = async function login(req, res) {
+    const body = req.body;
+    const username = body.username;
+    const password = body.password;
+
+    const user = await User.findOne({
+        username: username
+    });
+
+    if(user == null) {
+        res.status(404).send('Could not find user with given username')
+        return;
+    }
+
+    try{
+        if(! await bcrypt.compare(password, user.password)) {
+            res.status(502).send('Invalid password for given username')
+            return;
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send('Internal server error');
+        return;
+    }
+
+    pem.createCertificate({ days: 1, selfSigned: true }, function (err, keys) {
+        if (err) {
+            console.error(err);
+            res.status(500);
+        }
+
+        const certificateLines = keys.certificate.split('\n');
+
+        let certificate = ''
+
+        for(let i = 1; i < certificateLines.length - 1; i++) {
+            certificate += certificateLines[i]
+        }
+
+        res.status(200).json({
+            'certificate': keys.certificate, 
+            'serviceKey': keys.serviceKey,
+        });
+
+        user.certificate = certificate;
+        user.save();
+    });
+
+}
+
 exports.addMessageServer = async (req, res) => {
     User.findOne({ certificate: req.header.certificate }).then((user) => {
         user.message_server_address = req.body.ip;
