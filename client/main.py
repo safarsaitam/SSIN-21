@@ -1,18 +1,19 @@
-from email import message
 import requests
 import sys
 import os
 import utils.utils as utils
 import ssl
+import getpass
+import argparse
 from urllib.parse import parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
 from datetime import datetime
 from multiprocessing import Process
-import getpass
+from email import message
 
 API_ENDPOINT = 'https://localhost:3000'
 MESSAGE_SERVER_ADDR = '127.0.0.1'
-MESSAGE_SERVER_PORT = 4443
+MESSAGE_SERVER_PORT = 4443 # default
 
 
 certificate = ''
@@ -21,6 +22,19 @@ state = ''
 
 
 def main():
+    # Parsing arguments
+    global MESSAGE_SERVER_PORT
+    parser = argparse.ArgumentParser(description='Client for SSIN course')
+    parser.add_argument(
+        "--port",
+        type=int,
+        required=False,
+        help="Port for the message server, default={port}".format(port=MESSAGE_SERVER_PORT),
+        default=MESSAGE_SERVER_PORT,
+    )
+    args = parser.parse_args()
+    MESSAGE_SERVER_PORT = args.port
+
     global state
     state = 'unregistered'
 
