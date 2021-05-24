@@ -9,7 +9,6 @@ const multer = require('multer');
 let servicesRouter = require('./routes/services');
 let authRouter = require('./routes/authentication');
 
-const router = require('./routes/router');
 require('dotenv').config();
 
 const multerMid = multer({
