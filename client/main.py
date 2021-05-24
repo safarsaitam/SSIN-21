@@ -1,15 +1,17 @@
+from email import message
 import requests
 import sys
 import os
 import utils.utils as utils
 import ssl
+from urllib.parse import parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
 from datetime import datetime
 from multiprocessing import Process
 import getpass
 
 API_ENDPOINT = 'https://localhost:3000'
-MESSAGE_SERVER_ADDR = 'localhost'
+MESSAGE_SERVER_ADDR = '127.0.0.1'
 MESSAGE_SERVER_PORT = 4443
 
 
@@ -183,12 +185,16 @@ def printRegisterResponse(r):
             keyFile.write(line)
         keyFile.close()
 
-        # Open server in new process
-        # Process(target=openServer).start()
-
         print('SERVER RESPONSE: REGISTRATION SUCCESSFUL')
         print('')
+        
+        # Open server in new process
+        Process(target=openServer, args=('certificate.pem', 'key.key')).start()
+
         setUsernamePassword()
+
+        print('SERVER RESPONSE: AUTHENTICATION SUCCESSFUL')
+
     elif status == 404:
         print('SERVER RESPONSE: ' + r.text)
         menu()
@@ -249,10 +255,10 @@ def printLoginResponse(r):
             keyFile.write(line)
         keyFile.close()
 
-        # Open server in new process
-        # Process(target=openServer).start()
-
         print('SERVER RESPONSE: AUTHENTICATION SUCCESSFUL')
+
+        # Open server in new process
+        Process(target=openServer, args=('certificate.pem', 'key.key')).start()
     else:
         print('SERVER RESPONSE: ' + r.text)
 
@@ -370,30 +376,78 @@ def nRoot():
     )
     printServiceResponse(r, 'nRoot')
 
-# def openServer():
-#     # do stuff
-#     httpd = HTTPServer((MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT), SimpleHTTPRequestHandler)
+def openServer(certificateFile, keyFile):
+    # do stuff
+    httpd = HTTPServer((MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT), MessageServerHandler)
 
-#     httpd.socket = ssl.wrap_socket(
-#         httpd.socket,
-#         keyfile='',
-#         certfile='',
-#         server_side=True
-#         )
+    httpd.socket = ssl.wrap_socket(
+        httpd.socket,
+        keyfile=keyFile,
+        certfile=certificateFile,
+        server_side=True
+        )
+    httpd.serve_forever()
 
-#     httpd.serve_forever()
+    # tell server ip and port
+    data = {
+        'ip': MESSAGE_SERVER_ADDR,
+        'port': MESSAGE_SERVER_PORT
+    }
 
-#     print('Opened message server on ' + MESSAGE_SERVER_ADDR + ':' + MESSAGE_SERVER_PORT)
+    r = requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, verify=False)
+    printServiceResponse(r, 'Post message server info')
 
-#     # tell server ip and port
-#     data = {
-#         'ip': MESSAGE_SERVER_ADDR,
-#         'port': MESSAGE_SERVER_PORT
-#     }
+class MessageServerHandler(BaseHTTPRequestHandler):
+    def _set_response(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
 
-#     r = requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, verify=False)
-#     printServiceResponse(r, 'Post message server info')
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
+        
+        cert = self.headers['authorization']
+        (isAuth, username, full_name) = self.get_sender(cert)
 
+        if isAuth:
+            post_data = self.rfile.read(content_length) # <--- Gets the data itself            
+            message = post_data.decode('utf-8')
+            print('{fullname} ({username}): {message}'.format(fullname= full_name, username= username, message= message))
+            
+            self._set_response()
+            self.wfile.write("Received message".encode('utf-8'))
+        else:
+            print('Blocked message')
+            
+            self.send_response(403)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write("Unauthorized".encode('utf-8'))
+
+    
+    def get_sender(self, senderCertificate):
+        headers = {
+            'authorization': utils.trimPems(certificate)
+        }
+
+        data = {
+            'certificate': senderCertificate
+        }
+
+        r = requests.post(
+            url=API_ENDPOINT + '/auth/whoIs',
+            headers=headers,
+            data=data,
+            verify=False
+        )
+
+        if r.status_code == 200:
+            response_json = r.json()
+            return (True, response_json['username'], response_json['full_name'])
+        else:
+            return (False, '', '')
+        
 
 # the program is initiated, so to speak, here
-main()
+if __name__ == "__main__":
+    main()
