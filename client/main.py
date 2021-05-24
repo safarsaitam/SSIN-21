@@ -187,6 +187,8 @@ def printRegisterResponse(r):
         # Process(target=openServer).start()
 
         print('SERVER RESPONSE: REGISTRATION SUCCESSFUL')
+        print('')
+        setUsernamePassword()
     elif status == 404:
         print('SERVER RESPONSE: ' + r.text)
         menu()
@@ -194,8 +196,7 @@ def printRegisterResponse(r):
         print('SOMETHING WENT WRONG WITH THE SERVER')
         menu()
 
-    print('')
-    setUsernamePassword()
+    
 
 
 def register():
