@@ -157,7 +157,14 @@ def register():
 
 def squareRoot():
 
-    number = input('Number: ')
+    valid = False
+
+    while not valid:
+        number = input('Number: ')
+        if utils.isNumber(number):
+            valid = True
+        else:
+            print('Please insert a number')
 
     headers = {
         'authorization': utils.trimPems(certificate)
@@ -179,7 +186,14 @@ def squareRoot():
 
 def cubicRoot():
 
-    number = input('Number: ')
+    valid = False
+
+    while not valid:
+        number = input('Number: ')
+        if utils.isNumber(number):
+            valid = True
+        else:
+            print('Please insert a number')
 
     headers = {
         'authorization': utils.trimPems(certificate)
@@ -201,8 +215,23 @@ def cubicRoot():
 
 def nRoot():
 
-    number = input('Number: ')
-    index = input('Index (nth root): ')
+    valid = False
+
+    while not valid:
+        number = input('Number: ')
+        if utils.isNumber(number):
+            valid = True
+        else:
+            print('Please insert a number')
+
+    valid = False
+
+    while not valid:
+        index = input('Index (nth root): ')
+        if utils.isNumber(index):
+            valid = True
+        else:
+            print('Please insert a number')
 
     headers = {
         'authorization': utils.trimPems(certificate)
