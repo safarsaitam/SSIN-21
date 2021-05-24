@@ -58,6 +58,7 @@ def menu():
                 1: Square root
                 2: Cubic root
                 3: Nth root
+                m: Message a user
                 q: Quit
 
                 Please enter your choice: """)
@@ -70,6 +71,9 @@ def menu():
 
         elif choice == "3":
             nRoot()
+
+        elif choice == "M" or choice == "m":
+            sendMessage()
 
         elif choice == "Q" or choice == "q":
             state = "unregistered"
@@ -280,6 +284,55 @@ def login():
 
     printLoginResponse(r)
 
+def sendMessage():
+    valid = False
+
+    address = ''
+    port = 0
+
+    while not valid:
+        username = input('Insert recipient username: ')
+        if username == '' or not username.isalnum():
+            print('Please insert a valid username')
+        else:
+            headers = {
+                'authorization': utils.trimPems(certificate)
+            }
+            params = {
+                'username': username
+            }
+            r = requests.get(url=API_ENDPOINT +
+                            '/auth/messageServer', params=params, headers=headers, verify=False)
+            status = r.status_code
+            if status == 200:
+                response_json = r.json()
+                address = response_json['address']
+                port = response_json['port']
+                valid = True
+                break
+            elif status == 203:
+                print('User is offline')
+            else:
+                print('User is not valid')
+
+    print('')
+    valid = False
+
+    while not valid:
+        messageBody = input('Type your message: ')
+        if len(messageBody) > 0:
+            valid = True
+
+    headers = {
+        'authorization': utils.trimPems(certificate)
+    }
+
+    requests.post(
+        url= 'https://' + address + ':' + str(port),
+        data= messageBody.encode('utf-8'),
+        headers= headers,
+        verify= False
+        )
 
 def squareRoot():
 
@@ -377,18 +430,11 @@ def nRoot():
     printServiceResponse(r, 'nRoot')
 
 def openServer(certificateFile, keyFile):
-    # do stuff
-    httpd = HTTPServer((MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT), MessageServerHandler)
+    # Tell server ip and port
+    file = open('certificate.pem', mode='r')
+    certificate = file.read()
+    file.close()
 
-    httpd.socket = ssl.wrap_socket(
-        httpd.socket,
-        keyfile=keyFile,
-        certfile=certificateFile,
-        server_side=True
-        )
-    httpd.serve_forever()
-
-    # tell server ip and port
     headers = {
         'authorization': utils.trimPems(certificate)
     }
@@ -398,8 +444,18 @@ def openServer(certificateFile, keyFile):
         'port': MESSAGE_SERVER_PORT
     }
 
-    r = requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, headers=headers, verify=False)
-    printServiceResponse(r, 'Post message server info')
+    requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, headers=headers, verify=False)
+
+    # Open message server
+    httpd = HTTPServer((MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT), MessageServerHandler)
+
+    httpd.socket = ssl.wrap_socket(
+        httpd.socket,
+        keyfile=keyFile,
+        certfile=certificateFile,
+        server_side=True
+        )
+    httpd.serve_forever()
 
 class MessageServerHandler(BaseHTTPRequestHandler):
     def _set_response(self):

@@ -158,12 +158,19 @@ exports.addMessageServer = async (req, res) => {
 
 exports.getMessageServer = async (req, res) => {
     User.findOne({ username: req.query.username }).then((user) => {
-        if (!user) res.status(400).send('No user found');
+        if (!user) {
+            res.status(400).send('No user found');
+            return;
+        }
         
-        res.status(200).json({
-            'address': user.message_server_address,
-            'port': user.message_server_port,
-        });
+        if (!user.message_server_address || user.message_server_address == '') {
+            res.status(203).send('User if offline');
+        } else {
+            res.status(200).json({
+                'address': user.message_server_address,
+                'port': user.message_server_port,
+            });
+        }
     }).catch(res.status(500));
 }
 

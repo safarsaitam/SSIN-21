@@ -20,13 +20,14 @@ const userSchema = new mongoose.Schema({
     },
     id: {
         type: String,
-        default: "",
+        default: '',
     },
     certificate: {
         type: String,
     },
     message_server_address: {
         type: String,
+        default: '',
     },
     message_server_port: {
         type: Number,
