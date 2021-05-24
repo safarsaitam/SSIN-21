@@ -36,7 +36,12 @@ exports.registerUser = async function registerUser(req, res) {
             );
         }
     );
+}
 
+exports.addMessageServer = async (req, res) => {
+    res.status(200).send('adding message server');
+}
 
-
+exports.getMessageServer = async (req, res) => {
+    res.status(200).send('retrieving message server');
 }
