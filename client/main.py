@@ -1,9 +1,11 @@
 import requests
 import sys
 import os
+import utils.utils as utils
 from datetime import datetime
 
 API_ENDPOINT = 'https://localhost:3000'
+
 
 def main():
     print("************Welcome to Application Menu**************")
@@ -26,13 +28,13 @@ def menu():
         register()
 
     elif choice == "2":
-        squareRoot() 
+        squareRoot()
 
     elif choice == "3":
-        cubicRoot() 
+        cubicRoot()
 
     elif choice == "4":
-        nRoot()     
+        nRoot()
 
     elif choice == "Q" or choice == "q":
         sys.exit
@@ -42,12 +44,12 @@ def menu():
         print("Please try again")
         menu()
 
-def printResponse(r, key):
-    os.system('clear')    
+
+def printServiceResponse(r, key):
+    os.system('clear')
 
     status = r.status_code
 
-    response = r.json()
     print(datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
 
     if status == 200:
@@ -57,9 +59,28 @@ def printResponse(r, key):
         print('SERVER RESPONSE: ' + r.text)
     else:
         print('SOMETHING WENT WRONG WITH THE SERVER')
-    
+
     print('')
     menu()
+
+
+def printRegisterResponse(r):
+    os.system('clear')
+
+    status = r.status_code
+
+    print(datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+
+    if status == 200:
+        print('SERVER RESPONSE: REGISTRATION SUCCESSFUL')
+    elif status == 404:
+        print('SERVER RESPONSE: ' + r.text)
+    else:
+        print('SOMETHING WENT WRONG WITH THE SERVER')
+
+    print('')
+    menu()
+
 
 def register():
 
@@ -72,59 +93,94 @@ def register():
     }
 
     # Remove verify=False after CA
-    r = requests.post(url= API_ENDPOINT + '/auth/register', data=data, verify=False)
-    
-    response = r.text
-    print('')
-    print(response)
-    print('')
-    menu()
+    r = requests.post(url=API_ENDPOINT + '/auth/register',
+                      data=data, verify=False)
+    response = r.json()
+    global certificate
+    certificate = response['certificate']
+
+    certificateFile = open('certificate.pem', 'a')
+    for line in certificate:
+        certificateFile.write(line)
+    certificateFile.close()
+
+    global key
+    key = response['serviceKey']
+
+    keyFile = open('key.key', 'a')
+    for line in key:
+        keyFile.write(line)
+    keyFile.close()    
+
+    printRegisterResponse(r)
 
 
 def squareRoot():
-    
-    username = input('Username: ') # Adapt once CA has been handled
+
     number = input('Number: ')
 
+    headers = {
+        'authorization': utils.trimPems(certificate)
+    }
+
     data = {
-        'username': username,
         'number': number
     }
 
     # Remove verify=False after CA
-    r = requests.post(url=API_ENDPOINT + '/services/sqrt', data=data, verify=False)
-    printResponse(r, 'squareRoot')
+    r = requests.post(
+        url=API_ENDPOINT + '/services/sqrt',
+        headers=headers,
+        data=data,
+        verify=False
+    )
+    printServiceResponse(r, 'squareRoot')
+
 
 def cubicRoot():
-    
-    username = input('Username: ') # Adapt once CA has been handled
+
     number = input('Number: ')
 
+    headers = {
+        'authorization': utils.trimPems(certificate)
+    }
+
     data = {
-        'username': username,
         'number': number
     }
 
     # Remove verify=False after CA
-    r = requests.post(url=API_ENDPOINT + '/services/cbrt', data=data, verify=False)
-    printResponse(r, 'cubicRoot')
+    r = requests.post(
+        url=API_ENDPOINT + '/services/cbrt',
+        headers=headers,
+        data=data,
+        verify=False
+    )
+    printServiceResponse(r, 'cubicRoot')
+
 
 def nRoot():
-    
-    username = input('Username: ') # Adapt once CA has been handled
+
     number = input('Number: ')
     index = input('Index (nth root): ')
 
+    headers = {
+        'authorization': utils.trimPems(certificate)
+    }
+
     data = {
-        'username': username,
         'number': number,
         'index': index
     }
 
     # Remove verify=False after CA
-    r = requests.post(url=API_ENDPOINT + '/services/nrt', data=data, verify=False)
-    printResponse(r, 'nRoot')        
-    
+    r = requests.post(
+        url=API_ENDPOINT + '/services/nrt',
+        headers=headers,
+        data=data,
+        verify=False
+    )
+    printServiceResponse(r, 'nRoot')
 
 
 # the program is initiated, so to speak, here

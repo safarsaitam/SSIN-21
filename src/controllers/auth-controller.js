@@ -3,8 +3,6 @@ const pem = require('pem');
 
 exports.registerUser = async function registerUser(req, res) {
 
-    console.log('hello');
-
     const body = req.body;
     const username = body.username;
     const oneTimeId = body.oneTimeId;
@@ -27,10 +25,22 @@ exports.registerUser = async function registerUser(req, res) {
                             console.error(err);
                             res.status(500);
                         }
+
+                        const certificateLines = keys.certificate.split('\n');
+
+                        let certificate = ''
+
+                        for(let i = 1; i < certificateLines.length - 1; i++) {
+                            certificate += certificateLines[i]
+                        }
+
                         res.status(200).json({
-                            'certificate': keys.certificate,
+                            'certificate': keys.certificate, 
                             'serviceKey': keys.serviceKey,
                         });
+
+                        users[0].certificate = certificate;
+                        users[0].save();
                     });
                 }
             );

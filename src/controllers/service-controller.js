@@ -1,18 +1,18 @@
 const User = require('../models/user.model');
 
-exports.squareRoot = async function squareRoot(req, res) {
+exports.squareRoot = async function squareRoot(req, res) { 
 
     const body = req.body;
-    const username = body.username;
+    const certificate = req.headers.authorization;
+
     const user = await User.findOne({
-        username: username
-    }); // this method of authentication should be changed after CA
+        certificate: certificate
+    }); 
 
     if(user == null) {
         res.status(404).send('Could not find user in database');
         return;
     }
-
 
     if (user.security_level < 1) {
         res.status(403).json('You do not have access to this service')
@@ -28,10 +28,11 @@ exports.squareRoot = async function squareRoot(req, res) {
 exports.cubicRoot = async function cubicRoot(req, res) {
 
     const body = req.body;
-    const username = body.username;
+    const certificate = req.headers.authorization;
+
     const user = await User.findOne({
-        username: username
-    }); // this method of authentication should be changed after CA
+        certificate: certificate
+    }); 
 
     if(user == null) {
         res.status(404).send('Could not find user in database');
@@ -52,10 +53,11 @@ exports.cubicRoot = async function cubicRoot(req, res) {
 exports.nRoot = async function nRoot(req, res) {
 
     const body = req.body;
-    const username = body.username;
+    const certificate = req.headers.authorization;
+
     const user = await User.findOne({
-        username: username
-    }); // this method of authentication should be changed after CA
+        certificate: certificate
+    }); 
 
     if(user == null) {
         res.status(404).send('Could not find user in database');
