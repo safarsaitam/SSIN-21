@@ -6,5 +6,6 @@ router.post('/register', authController.registerUser);
 router.get('/messageServer', authController.getMessageServer);
 router.post('/messageServer', authController.addMessageServer);
 
-module.exports = router;
+router.post('/whoIs', authController.whoIs);
 
+module.exports = router;

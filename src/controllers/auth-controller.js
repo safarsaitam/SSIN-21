@@ -57,3 +57,14 @@ exports.getMessageServer = async (req, res) => {
         });
     }).catch(res.status(500));
 }
+
+exports.whoIs = async (req, res) => {
+    User.findOne({ certificate: req.body.certificate }).then((user) => {
+        if (!user) res.status(400).send('No user found');
+
+        res.status(200).json({
+            'username': user.username,
+            'full_name': user.full_name,
+        });
+    }).catch(res.status(500));
+}
