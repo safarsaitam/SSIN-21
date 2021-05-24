@@ -6,6 +6,7 @@ import ssl
 from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
 from datetime import datetime
 from multiprocessing import Process
+import getpass
 
 API_ENDPOINT = 'https://localhost:3000'
 MESSAGE_SERVER_ADDR = 'localhost'
@@ -15,6 +16,7 @@ MESSAGE_SERVER_PORT = 4443
 certificate = ''
 key = ''
 state = ''
+
 
 def main():
     global state
@@ -56,13 +58,13 @@ def menu():
                 Please enter your choice: """)
 
         if choice == "1":
-            squareRoot() 
+            squareRoot()
 
         elif choice == "2":
-            cubicRoot() 
+            cubicRoot()
 
         elif choice == "3":
-            nRoot()     
+            nRoot()
 
         elif choice == "Q" or choice == "q":
             sys.exit
@@ -91,6 +93,56 @@ def printServiceResponse(r, key):
     print('')
     menu()
 
+def printSimpleResponse(r):
+    os.system('clear')
+
+    print(datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+    
+    print('SERVER RESPONSE: ' + r.text)
+
+    print('')
+    menu()
+
+def setUsernamePassword():
+
+    valid = False
+
+    while not valid:
+        username = input('Insert a new username: ')
+        if username == '' or not username.isalnum():
+            print('Please insert a valid username')
+        else:
+            r = requests.get(url=API_ENDPOINT +
+                             '/auth/available/username/' + username, verify=False)
+            status = r.status_code
+            if status == 200:
+                break
+            else:
+                print('Username is already taken')
+
+    print('')
+    valid = False
+
+    while not valid:
+        password = getpass.getpass('Insert a password: ')
+        if len(password) > 0:
+            valid = True
+
+    data = {
+        'username': username,
+        'password': password
+    }
+
+    headers = {
+        'authorization': utils.trimPems(certificate)
+    }
+
+    r = requests.post(url=API_ENDPOINT +
+                      '/auth/set-username-password', data=data, headers=headers, verify=False)
+
+    printSimpleResponse(r)
+
+
 
 def printRegisterResponse(r):
     os.system('clear')
@@ -102,7 +154,7 @@ def printRegisterResponse(r):
     if status == 200:
         global state
         state = "registered"
-    
+
         # Open server in new process
         # Process(target=openServer).start()
 
@@ -113,7 +165,7 @@ def printRegisterResponse(r):
         print('SOMETHING WENT WRONG WITH THE SERVER')
 
     print('')
-    menu()
+    setUsernamePassword()
 
 
 def register():
@@ -126,7 +178,6 @@ def register():
         'oneTimeId': onetimeid
     }
 
-    # Remove verify=False after CA
     r = requests.post(url=API_ENDPOINT + '/auth/register',
                       data=data, verify=False)
     response = r.json()
@@ -146,11 +197,11 @@ def register():
 
     if os.path.exists('key.key'):
         os.remove('key.key')
-    
+
     keyFile = open('key.key', 'a')
     for line in key:
         keyFile.write(line)
-    keyFile.close()    
+    keyFile.close()
 
     printRegisterResponse(r)
 
@@ -242,14 +293,13 @@ def nRoot():
         'index': index
     }
 
-    # Remove verify=False after CA
     r = requests.post(
         url=API_ENDPOINT + '/services/nrt',
         headers=headers,
         data=data,
         verify=False
     )
-    printServiceResponse(r, 'nRoot')    
+    printServiceResponse(r, 'nRoot')
 
 # def openServer():
 #     # do stuff
@@ -258,14 +308,14 @@ def nRoot():
 #     httpd.socket = ssl.wrap_socket(
 #         httpd.socket,
 #         keyfile='',
-#         certfile='', 
+#         certfile='',
 #         server_side=True
 #         )
 
 #     httpd.serve_forever()
 
 #     print('Opened message server on ' + MESSAGE_SERVER_ADDR + ':' + MESSAGE_SERVER_PORT)
-    
+
 #     # tell server ip and port
 #     data = {
 #         'ip': MESSAGE_SERVER_ADDR,

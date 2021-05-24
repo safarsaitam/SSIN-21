@@ -1,5 +1,6 @@
 const User = require('../models/user.model');
 const pem = require('pem');
+const bcrypt = require('bcryptjs');
 
 exports.registerUser = async function registerUser(req, res) {
 
@@ -46,6 +47,54 @@ exports.registerUser = async function registerUser(req, res) {
             );
         }
     );
+}
+
+exports.checkUsernameAvailability = async function checkUsernameAvailability(req, res) {
+    const username = req.param('username');
+
+    const user = await User.findOne({
+        username: username
+    });
+
+    if(user == null) {
+        res.status(200).send('Username is available');
+    } else {
+        res.status(405).send('Username is already taken');
+    }
+}
+
+exports.setUsernameAndPassword = async function setUsernameAndPassword(req, res) {  
+    const certificate = req.headers.authorization;
+
+    const user = await User.findOne({
+        certificate: certificate
+    }); 
+
+    if(user == null) {
+        res.status(404).send('Could not find user in database');
+        return;
+    }
+
+    const body = req.body;
+    const username = body.username;
+    const password = body.password;
+
+    try {
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        user.username = username;
+        user.password = hashedPassword;
+        await user.save();
+        
+        res.status(200).send('Credentials updated successfully');
+
+    } catch(error) {
+        console.log(error);
+        res.status(500).send('Internal server error');
+    }
+
+
 }
 
 exports.addMessageServer = async (req, res) => {
