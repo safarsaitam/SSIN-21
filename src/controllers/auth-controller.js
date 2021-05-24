@@ -39,9 +39,21 @@ exports.registerUser = async function registerUser(req, res) {
 }
 
 exports.addMessageServer = async (req, res) => {
-    res.status(200).send('adding message server');
+    User.findOne({ certificate: req.header.certificate }).then((user) => {
+        user.message_server_address = req.body.ip;
+        user.message_server_port = req.body.port;
+        user.save();
+        res.status(200).send('Added message server');
+    })
 }
 
 exports.getMessageServer = async (req, res) => {
-    res.status(200).send('retrieving message server');
+    User.findOne({ username: req.query.username }).then((user) => {
+        if (!user) res.status(400).send('No user found');
+        
+        res.status(200).json({
+            'address': user.message_server_address,
+            'port': user.message_server_port,
+        });
+    }).catch(res.status(500));
 }

@@ -21,7 +21,13 @@ const userSchema = new mongoose.Schema({
     },
     certificate: {
         type: String,
-    }
+    },
+    message_server_address: {
+        type: String,
+    },
+    message_server_port: {
+        type: Number,
+    },
 });
 
 const User = mongoose.models.User
