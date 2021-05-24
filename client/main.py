@@ -12,14 +12,20 @@ MESSAGE_SERVER_ADDR = 'localhost'
 MESSAGE_SERVER_PORT = 4443
 
 
+certificate = ''
+key = ''
+state = ''
+
 def main():
+    global state
+    state = 'unregistered'
+
     print("************Welcome to Application Menu**************")
     menu()
 
-state = "unregistered"
 
 def menu():
-    if state == "unregistred":
+    if state == "unregistered":
         print()
 
         choice = input("""
@@ -94,10 +100,11 @@ def printRegisterResponse(r):
     print(datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
 
     if status == 200:
-        state = "registred"
+        global state
+        state = "registered"
     
         # Open server in new process
-        Process(target=openServer).start()
+        # Process(target=openServer).start()
 
         print('SERVER RESPONSE: REGISTRATION SUCCESSFUL')
     elif status == 404:
@@ -126,6 +133,9 @@ def register():
     global certificate
     certificate = response['certificate']
 
+    if os.path.exists('certificate.pem'):
+        os.remove('certificate.pem')
+
     certificateFile = open('certificate.pem', 'a')
     for line in certificate:
         certificateFile.write(line)
@@ -134,6 +144,9 @@ def register():
     global key
     key = response['serviceKey']
 
+    if os.path.exists('key.key'):
+        os.remove('key.key')
+    
     keyFile = open('key.key', 'a')
     for line in key:
         keyFile.write(line)
@@ -209,29 +222,29 @@ def nRoot():
     )
     printServiceResponse(r, 'nRoot')    
 
-def openServer():
-    # do stuff
-    httpd = HTTPServer((MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT), SimpleHTTPRequestHandler)
+# def openServer():
+#     # do stuff
+#     httpd = HTTPServer((MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT), SimpleHTTPRequestHandler)
 
-    httpd.socket = ssl.wrap_socket(
-        httpd.socket,
-        keyfile='',
-        certfile='', 
-        server_side=True
-        )
+#     httpd.socket = ssl.wrap_socket(
+#         httpd.socket,
+#         keyfile='',
+#         certfile='', 
+#         server_side=True
+#         )
 
-    httpd.serve_forever()
+#     httpd.serve_forever()
 
-    print('Opened message server on ' + MESSAGE_SERVER_ADDR + ':' + MESSAGE_SERVER_PORT)
+#     print('Opened message server on ' + MESSAGE_SERVER_ADDR + ':' + MESSAGE_SERVER_PORT)
     
-    # tell server ip and port
-    data = {
-        'ip': MESSAGE_SERVER_ADDR,
-        'port': MESSAGE_SERVER_PORT
-    }
+#     # tell server ip and port
+#     data = {
+#         'ip': MESSAGE_SERVER_ADDR,
+#         'port': MESSAGE_SERVER_PORT
+#     }
 
-    r = requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, verify=False)
-    printServiceResponse(r, 'Post message server info')
+#     r = requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, verify=False)
+#     printServiceResponse(r, 'Post message server info')
 
 
 # the program is initiated, so to speak, here

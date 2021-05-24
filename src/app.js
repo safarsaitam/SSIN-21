@@ -38,7 +38,6 @@ app.use(multerMid.single('file'));
 // Loads all the api routes
 app.use('/services', servicesRouter);
 app.use('/auth', authRouter);
-app.use('/', router);
 
 // Optional fallthrough error handler
 app.use((err, req, res) => {
