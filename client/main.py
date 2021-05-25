@@ -525,7 +525,7 @@ class MessageServerHandler(BaseHTTPRequestHandler):
         if isAuth:
             post_data = self.rfile.read(content_length) # <--- Gets the data itself            
             message = post_data.decode('utf-8')
-            print('{fullname} ({username}): {message}'.format(fullname= full_name, username= username, message= message))
+            print('\n{fullname} ({username}): {message}'.format(fullname= full_name, username= username, message= message))
             
             self._set_response()
             self.wfile.write("Received message".encode('utf-8'))
