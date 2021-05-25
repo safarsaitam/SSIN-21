@@ -25,7 +25,8 @@ certificate = ''
 key = ''
 state = ''
 
-def certFileName(isCertificate) -> str:
+def certFileName(isCertificate = True) -> str:
+    # If true is certificate, otherwise is key
     if isCertificate:
         return '{prefix}-{port}.pem'.format(prefix=CERTIFICATE_FILE_PREFIX, port=MESSAGE_SERVER_PORT)
     else:
