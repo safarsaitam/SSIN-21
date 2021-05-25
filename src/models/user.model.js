@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema({
     },
     certificate: {
         type: String,
+        default: '',
     },
     message_server_address: {
         type: String,

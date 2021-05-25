@@ -4,18 +4,35 @@ const { customAlphabet } = require('nanoid');
 const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'; 
 const idLength = 12;
 
-User.find()
-    .then(
-        (users) => {
-            users.forEach(user => {
-                if (user.id === '') {
-                    id = customAlphabet(alphabet, idLength);
-                    user.id = id();
-                    user.save();
-                    console.log(user);
+exports.GenerateForEveryUser = () => {
+    User.find()
+        .then(
+            (users) => {
+                users.forEach(user => {
+                        id = customAlphabet(alphabet, idLength);
+                        user.id = id();
+                        user.save();
+                        console.log(user);
+                })
+            }
+            )
+            .catch(console.error)
+}
+
+exports.GenerateForUser = (username) => {
+    User.findOne({username: username})
+        .then(
+            (user) => {
+                if (!user) {
+                    console.log("No user found");
+                    return;
                 }
-            })
-        }
-    )
-    .catch(console.error)
+                id = customAlphabet(alphabet, idLength);
+                user.id = id();
+                user.save();
+                console.log(user);
+            }
+        )
+        .catch(console.error)
+}
 

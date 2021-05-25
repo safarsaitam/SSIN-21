@@ -5,21 +5,31 @@ import utils.utils as utils
 import ssl
 import getpass
 import argparse
+from functools import partial
 from urllib.parse import parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
 from datetime import datetime
 from multiprocessing import Process
 from email import message
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 API_ENDPOINT = 'https://localhost:3000'
 MESSAGE_SERVER_ADDR = '127.0.0.1'
 MESSAGE_SERVER_PORT = 4443 # default
-
+MESSAGE_SERVER_PROCESS = None
+CERTIFICATE_FILE_PREFIX = 'certificate'
+KEY_FILE_PREFIX = 'key'
 
 certificate = ''
 key = ''
 state = ''
 
+def certFileName(isCertificate) -> str:
+    if isCertificate:
+        return '{prefix}-{port}.pem'.format(prefix=CERTIFICATE_FILE_PREFIX, port=MESSAGE_SERVER_PORT)
+    else:
+        return '{prefix}-{port}.key'.format(prefix=KEY_FILE_PREFIX, port=MESSAGE_SERVER_PORT)
 
 def main():
     # Parsing arguments
@@ -59,7 +69,7 @@ def menu():
         elif choice == "2":
             login()
         elif choice == "Q" or choice == "q":
-            sys.exit
+            sys.exit()
         else:
             os.system('clear')
             print("Invalid option chosen")
@@ -92,6 +102,16 @@ def menu():
 
         elif choice == "Q" or choice == "q":
             state = "unregistered"
+
+            # Logging out in server
+            headers = {
+                'authorization': utils.trimPems(certificate)
+            }
+            requests.post(url=API_ENDPOINT + '/auth/logOut', headers=headers, verify=False)
+
+            # Killing message server
+            MESSAGE_SERVER_PROCESS.kill()
+            
             os.system('clear')
             menu()
         else:
@@ -138,8 +158,14 @@ def setUsernamePassword():
         if username == '' or not username.isalnum():
             print('Please insert a valid username')
         else:
-            r = requests.get(url=API_ENDPOINT +
-                             '/auth/available/username/' + username, verify=False)
+            headers = {
+                'authorization': utils.trimPems(certificate)
+            }
+            r = requests.get(
+                url=API_ENDPOINT + '/auth/available/username/' + username,
+                headers=headers,
+                verify=False
+                )
             status = r.status_code
             if status == 200:
                 break
@@ -185,10 +211,10 @@ def printRegisterResponse(r):
         global certificate
         certificate = response['certificate']
 
-        if os.path.exists('certificate.pem'):
-            os.remove('certificate.pem')
+        if os.path.exists(certFileName(True)):
+            os.remove(certFileName(True))
 
-        certificateFile = open('certificate.pem', 'a')
+        certificateFile = open(certFileName(True), 'a')
         for line in certificate:
             certificateFile.write(line)
         certificateFile.close()
@@ -196,10 +222,10 @@ def printRegisterResponse(r):
         global key
         key = response['serviceKey']
 
-        if os.path.exists('key.key'):
-            os.remove('key.key')
+        if os.path.exists(certFileName(False)):
+            os.remove(certFileName(False))
 
-        keyFile = open('key.key', 'a')
+        keyFile = open(certFileName(False), 'a')
         for line in key:
             keyFile.write(line)
         keyFile.close()
@@ -208,7 +234,9 @@ def printRegisterResponse(r):
         print('')
         
         # Open server in new process
-        Process(target=openServer, args=('certificate.pem', 'key.key')).start()
+        global MESSAGE_SERVER_PROCESS
+        MESSAGE_SERVER_PROCESS = Process(target=openServer, args=(MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT, certFileName(True), certFileName(False)))
+        MESSAGE_SERVER_PROCESS.start()
 
         print('SERVER RESPONSE: AUTHENTICATION SUCCESSFUL')
 
@@ -255,10 +283,10 @@ def printLoginResponse(r):
         global certificate
         certificate = response['certificate']
 
-        if os.path.exists('certificate.pem'):
-            os.remove('certificate.pem')
+        if os.path.exists(certFileName(True)):
+            os.remove(certFileName(True))
 
-        certificateFile = open('certificate.pem', 'a')
+        certificateFile = open(certFileName(True), 'a')
         for line in certificate:
             certificateFile.write(line)
         certificateFile.close()
@@ -266,10 +294,10 @@ def printLoginResponse(r):
         global key
         key = response['serviceKey']
 
-        if os.path.exists('key.key'):
-            os.remove('key.key')
+        if os.path.exists(certFileName(False)):
+            os.remove(certFileName(False))
 
-        keyFile = open('key.key', 'a')
+        keyFile = open(certFileName(False), 'a')
         for line in key:
             keyFile.write(line)
         keyFile.close()
@@ -277,7 +305,9 @@ def printLoginResponse(r):
         print('SERVER RESPONSE: AUTHENTICATION SUCCESSFUL')
 
         # Open server in new process
-        Process(target=openServer, args=('certificate.pem', 'key.key')).start()
+        global MESSAGE_SERVER_PROCESS
+        MESSAGE_SERVER_PROCESS = Process(target=openServer, args=(MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT, certFileName(True), certFileName(False)))
+        MESSAGE_SERVER_PROCESS.start()
     else:
         print('SERVER RESPONSE: ' + r.text)
 
@@ -446,9 +476,9 @@ def nRoot():
     )
     printServiceResponse(r, 'nRoot')
 
-def openServer(certificateFile, keyFile):
+def openServer(ip, port, certificateFile, keyFile):
     # Tell server ip and port
-    file = open('certificate.pem', mode='r')
+    file = open(certificateFile, mode='r')
     certificate = file.read()
     file.close()
 
@@ -457,14 +487,15 @@ def openServer(certificateFile, keyFile):
     }
 
     data = {
-        'ip': MESSAGE_SERVER_ADDR,
-        'port': MESSAGE_SERVER_PORT
+        'ip': ip,
+        'port': port
     }
 
     requests.post(url=API_ENDPOINT + '/auth/messageServer', data=data, headers=headers, verify=False)
 
     # Open message server
-    httpd = HTTPServer((MESSAGE_SERVER_ADDR, MESSAGE_SERVER_PORT), MessageServerHandler)
+    server_handler = partial(MessageServerHandler, certificate)
+    httpd = HTTPServer((ip, port), server_handler)
 
     httpd.socket = ssl.wrap_socket(
         httpd.socket,
@@ -475,6 +506,10 @@ def openServer(certificateFile, keyFile):
     httpd.serve_forever()
 
 class MessageServerHandler(BaseHTTPRequestHandler):
+    def __init__(self, certificate, *args, **kwargs):
+        self.certificate = certificate
+        super().__init__(*args, **kwargs)
+
     def _set_response(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
@@ -502,13 +537,9 @@ class MessageServerHandler(BaseHTTPRequestHandler):
             self.wfile.write('Unauthorized'.encode('utf-8'))
 
     
-    def get_sender(self, senderCertificate):
-        file = open('certificate.pem', mode='r')
-        certificate = file.read()
-        file.close()
-        
+    def get_sender(self, senderCertificate):        
         headers = {
-            'authorization': utils.trimPems(certificate)
+            'authorization': utils.trimPems(self.certificate)
         }
 
         data = {

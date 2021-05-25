@@ -22,7 +22,8 @@ require('./database/database');
 require('./database/seed');
 
 // Create missing temporary user IDS
-require('./database/create_user_ids');
+const id_generator = require('./database/create_user_ids');
+id_generator.GenerateForEveryUser();
 
 const app = express();
 

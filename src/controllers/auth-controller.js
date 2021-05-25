@@ -177,10 +177,19 @@ exports.getMessageServer = async (req, res) => {
 exports.whoIs = async (req, res) => {
     User.findOne({ certificate: req.body.certificate }).then((user) => {
         if (!user) res.status(400).send('No user found');
-
+        
         res.status(200).json({
             'username': user.username,
             'full_name': user.full_name,
         });
     }).catch(res.status(500));
+}
+
+exports.logOut = (req, res) => {
+    User.findOne({ certificate: req.headers.authorization }).then((user) => {
+        // Marking the user as logged out
+        user.message_server_address = '';
+        user.certificate = '';
+        user.save();
+    }).catch(res.status(500));    
 }
