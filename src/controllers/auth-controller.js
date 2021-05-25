@@ -191,5 +191,6 @@ exports.logOut = (req, res) => {
         user.message_server_address = '';
         user.certificate = '';
         user.save();
+        res.status(200).send("Logged out");
     }).catch(res.status(500));    
 }
